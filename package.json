@@ -9,8 +9,7 @@
   },
   "main": "./lib/anapi.js",
   "scripts" : {
-    "test"  : "node lib/test.js",
-    "install" : "coffee -c -o lib src/anapi.coffee && echo Compiled $(ls lib)"
+    "build" : "coffee -c -o lib src/anapi.coffee && echo rebuilt anapi"
   },
   "engines": {
     "node": ">= 0.8.0"
