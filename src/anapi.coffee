@@ -59,10 +59,11 @@ class AnonymousApi
     true
 
 
-if document?  
-  ###
+### ##
     Anapi Websocket Client
-  ###
+## ###
+
+if document?  
   class WebApi extends AnonymousApi
     constructor : (@address, @service) -> super()
 
@@ -74,16 +75,18 @@ if document?
       @socket.send '@'+id+':'+segment+'@'+m
       null
 
-    connect : =>
+    connect : (callback) =>
       @socket = new WebSocket(@address,@service)    if WebSocket?
       @socket = new MozWebSocket(@address,@service) if MozWebSocket?
       @socket.message   = (m) ->
         @send JSON.stringify m
       @socket.onerror   = (e) ->
         console.log "sock:error #{e}"
-        setTimeout @connect, 1000
+        # setTimeout @connect, 1000
+        callback false
       @socket.onopen    = (s) ->
         console.log "sock:connected"
+        callback true
       @socket.onmessage = (m) =>
         try
           m = JSON.parse(m.data)
@@ -95,10 +98,11 @@ if document?
 
   window.WebApi = WebApi
 
-else
   ###
     Anapi Websocket Server
   ###
+
+else
   WSS = require('ws').Server
   class AnapiWS extends WSS
     # Static infrastructure
@@ -139,8 +143,7 @@ else
         ws.fileid = 0  # UPLOAD
         ws.binary_message = (id=0,segment=0,m)->
           ws.send '@'+id+':'+segment+':'+m.length+':'+m+'@'
-        ws.message = (m) -> ws.send JSON.stringify(m)
-        _reply = ws.message
+        ws.message = _reply = (m) -> ws.send JSON.stringify(m)
         ws.request =
           handle        : ws
           from          : "websocket"
@@ -151,13 +154,14 @@ else
           if m[0] isnt "@"
             try m = JSON.parse(m.toString('utf8'))
             catch e
-              _reply {raw:e.toString()}
+              _reply raw : e.toString()
             _api.route m, ws.request
           else
             idx = -1
             break for idx in [4...10] when m[idx] is '@'
             if idx isnt 10
               [ id, segment ] = m.slice(1,idx).toString('utf8').split(':')
+              console.log 'upload'.blue, id, m.substr 0, 10
               ws.file[id].stream.write new Buffer m.slice(idx+1), 'binary'
             else console.log "Malformed", m.slice(0,10).toString 'utf8'
         ws.on "end",   -> AnapiWS.gone ws
@@ -165,8 +169,8 @@ else
         AnapiWS.there ws
 
       @api = _api = new AnonymousApi()
-      _api.register
-        ping  : (query, request) -> request.reply pong : true 
+      _api.register ping  : (query, request) -> request.reply pong : true 
 
-  module.exports.AnonymousApi = AnonymousApi
-  module.exports.Server       = AnapiWS
+  module.exports =
+    AnonymousApi : AnonymousApi
+    Server : AnapiWS
