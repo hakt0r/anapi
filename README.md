@@ -8,7 +8,7 @@
     var AnonymousApi = require('anapi');
 
 ### Copyrights
-  * c) 2013 Sebastian Glaser <anx@ulzq.de>
+  - c) 2013 Sebastian Glaser <anx@ulzq.de>
 
 ### Licensed under GNU GPLv3
 
